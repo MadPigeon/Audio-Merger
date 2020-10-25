@@ -1,5 +1,5 @@
 import os
-from unittest import mock
+from unittest.mock import patch
 
 import pytest
 
@@ -7,31 +7,29 @@ from src.audio_merger.file import File
 
 
 def test_constructor():
-    expected_path = 'D:/Desktop/05 filename.csv'
-    (mock.patch('os.path.isfile').start()).side_effect = \
-        lambda given_path: expected_path == given_path
+    file_path = 'D:/Desktop/05 filename.csv'
+    mock_accept_file_path(file_path)
 
-    assert File(expected_path)
+    assert File(file_path)
 
 
 def test_name_extracted():
     directory_path = 'D:/theMerge/'
     file_name = '02 filename.csv'
-    expected_path = os.path.join(directory_path, file_name)
-    (mock.patch('os.path.isfile').start()).side_effect = \
-        lambda given_path: expected_path == given_path
+    file_path = os.path.join(directory_path, file_name)
 
-    file = File(expected_path)
+    mock_accept_file_path(file_path)
+
+    file = File(file_path)
     assert file_name == file.original_name
 
 
 def test_directory_extracted():
     original_directory = 'channel_name'
-    expected_path = os.path.join('D:/', original_directory, '004 filename.wav')
-    (mock.patch('os.path.isfile').start()).side_effect = \
-        lambda given_path: expected_path == given_path
+    file_path = os.path.join('D:/', original_directory, '004 filename.wav')
+    mock_accept_file_path(file_path)
 
-    file = File(expected_path)
+    file = File(file_path)
     assert original_directory == file.original_directory
 
 
@@ -46,27 +44,24 @@ def test_directory():
 
 
 def test_original_number():
-    expected_path = 'D:/Desktop/05 filename.csv'
-    (mock.patch('os.path.isfile').start()).side_effect = \
-        lambda given_path: expected_path == given_path
+    file_path = 'D:/Desktop/05 filename.csv'
+    mock_accept_file_path(file_path)
 
-    file = File(expected_path)
+    file = File(file_path)
     assert type(file.original_number) is int
     assert 5 == file.original_number
 
 
 def test_name_without_number():
-    expected_path = 'D:/files_to_merge/05 filename.csv'
-    (mock.patch('os.path.isfile').start()).side_effect = \
-        lambda given_path: expected_path == given_path
-    file = File(expected_path)
+    file_path = 'D:/files_to_merge/05 filename.csv'
+    mock_accept_file_path(file_path)
+    file = File(file_path)
     assert 'filename.csv' == file.name_without_number
 
 
 def test_comparator():
     acceptable_files = ['D:/Games/24 frigates.wav', 'D:/Games/86 man-o-war.mp3']
-    (mock.patch('os.path.isfile').start()).side_effect = \
-        lambda given_path: given_path in acceptable_files
+    mock_accept_file_path(acceptable_files)
 
     smaller_file = File(acceptable_files[0])
     bigger_file = File(acceptable_files[1])
@@ -75,11 +70,16 @@ def test_comparator():
 
 def test_comparator_bad_input():
     acceptable_files = ['D:/folder_one/24 frigates.wav', 'D:/folder_two/86 man-o-war.mp3']
-    (mock.patch('os.path.isfile').start()).side_effect = \
-        lambda given_path: given_path in acceptable_files
+
+    mock_accept_file_path(acceptable_files)
 
     smaller_file = File(acceptable_files[0])
     bigger_file = File(acceptable_files[1])
 
     with pytest.raises(AssertionError):
         assert smaller_file < bigger_file
+
+
+def mock_accept_file_path(expected_path):
+    (patch('os.path.isfile').start()).side_effect = \
+        lambda given_path: given_path in expected_path
